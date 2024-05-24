@@ -1,43 +1,60 @@
 const express = require('express');
-let books = require("./booksdb.js");
-let isValid = require("./auth_users.js").isValid;
-let users = require("./auth_users.js").users;
-const public_users = express.Router();
+const axios = require('axios');
+const books = require("./booksdb.js");
+const generalRouter = express.Router();
 
-
-public_users.post("/register", (req,res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+// Route to get the list of books available in the shop using async-await with Axios
+generalRouter.get('/', async (req, res) => {
+    try {
+        const response = await axios.get('http://y21acs541-5000.theianext-0-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/books');
+        res.status(200).json(response.data);
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
 });
 
-// Get the book list available in the shop
-public_users.get('/',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+// Route to get book details based on ISBN using async-await with Axios
+generalRouter.get('/isbn/:isbn', async (req, res) => {
+    const isbn = req.params.isbn;
+    try {
+        const response = await axios.get('http://y21acs541-5000.theianext-0-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/book/${isbn}');
+        res.status(200).json(response.data);
+    } catch (error) {
+        res.status(404).json({ message: "Book not found" });
+    }
 });
 
-// Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
- });
-  
-// Get book details based on author
-public_users.get('/author/:author',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+// Route to get book details based on author using async-await with Axios
+generalRouter.get('/author/:author', async (req, res) => {
+    const author = req.params.author;
+    try {
+        const response = await axios.get(`http://y21acs541-5000.theianext-0-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/books?author=${author}`);
+        res.status(200).json(response.data);
+    } catch (error) {
+        res.status(404).json({ message: "Books by this author not found" });
+    }
 });
 
-// Get all books based on title
-public_users.get('/title/:title',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+// Route to get all books based on title using async-await with Axios
+generalRouter.get('/title/:title', async (req, res) => {
+    const title = req.params.title;
+    try {
+        const response = await axios.get(`http://y21acs541-5000.theianext-0-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/books?title=${title}`);
+        res.status(200).json(response.data);
+    } catch (error) {
+        res.status(404).json({ message: "Books with this title not found" });
+    }
 });
 
-//  Get book review
-public_users.get('/review/:isbn',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+// Route to get book reviews
+generalRouter.get('/review/:isbn', (req, res) => {
+    const isbn = req.params.isbn;
+    const book = books[isbn];
+    if (book && book.reviews) {
+        res.status(200).json(book.reviews);
+    } else {
+        res.status(404).json({ message: "Book reviews not found" });
+    }
 });
 
-module.exports.general = public_users;
+module.exports.general = generalRouter;
